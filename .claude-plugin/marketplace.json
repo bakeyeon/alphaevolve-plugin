@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "alphaevolve-plugin",
+  "version": "1.0.0",
+  "description": "Evolutionary coding and autonomous algorithm optimization inspired by Google DeepMind's AlphaEvolve and OpenEvolve.",
+  "owner": {
+    "name": "bakeyeon"
+  },
+  "plugins": [
+    {
+      "name": "alphaevolve",
+      "description": "Evolutionary coding and autonomous algorithm optimization inspired by Google DeepMind's AlphaEvolve and OpenEvolve.",
+      "source": "./",
+      "category": "development"
+    }
+  ]
+}

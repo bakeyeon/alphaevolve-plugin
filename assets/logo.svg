@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" fill="none">
+  <defs>
+    <linearGradient id="ae-grad-1" x1="16" y1="16" x2="112" y2="112" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#4285F4"/>
+      <stop offset="50%" stop-color="#34A853"/>
+      <stop offset="100%" stop-color="#FBBC04"/>
+    </linearGradient>
+    <linearGradient id="ae-grad-2" x1="112" y1="16" x2="16" y2="112" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#8AB4F8"/>
+      <stop offset="100%" stop-color="#81C995"/>
+    </linearGradient>
+  </defs>
+  <!-- Outer code brackets -->
+  <path d="M32 36L16 64L32 92" stroke="url(#ae-grad-1)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M96 36L112 64L96 92" stroke="url(#ae-grad-1)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Double helix / evolutionary paths -->
+  <path d="M44 26C44 50 84 50 84 64C84 78 44 78 44 102" stroke="url(#ae-grad-1)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M84 26C84 50 44 50 44 64C44 78 84 78 84 102" stroke="url(#ae-grad-2)" stroke-width="6" stroke-linecap="round"/>
+  <!-- Rungs -->
+  <line x1="50" y1="36" x2="78" y2="36" stroke="#8AB4F8" stroke-width="4" stroke-linecap="round"/>
+  <line x1="52" y1="64" x2="76" y2="64" stroke="#81C995" stroke-width="4" stroke-linecap="round"/>
+  <line x1="50" y1="92" x2="78" y2="92" stroke="#FDD663" stroke-width="4" stroke-linecap="round"/>
+  <!-- Nodes -->
+  <circle cx="44" cy="26" r="5" fill="#4285F4"/>
+  <circle cx="84" cy="26" r="5" fill="#8AB4F8"/>
+  <circle cx="44" cy="102" r="5" fill="#34A853"/>
+  <circle cx="84" cy="102" r="5" fill="#FBBC04"/>
+</svg>

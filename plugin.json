@@ -1,0 +1,12 @@
+{
+  "name": "alphaevolve",
+  "displayName": "AlphaEvolve",
+  "version": "1.0.0",
+  "description": "Evolutionary coding and autonomous algorithm optimization inspired by Google DeepMind's AlphaEvolve and OpenEvolve.",
+  "logo": "assets/logo.svg",
+  "suggestedPrompts": [
+    "이 알고리즘을 AlphaEvolve 방식으로 진화 탐색 및 성능 최적화해 줘",
+    "내 최적화 문제를 위한 AlphaEvolve / OpenEvolve 평가기(evaluator)와 초기 프로그램을 구성해 줘",
+    "휴리스틱 점수를 극대화하도록 함수를 진화적으로 개선해 줘"
+  ]
+}
