@@ -1,7 +1,7 @@
 {
   "name": "alphaevolve",
   "displayName": "AlphaEvolve",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Evolutionary coding and autonomous algorithm optimization inspired by Google DeepMind's AlphaEvolve and OpenEvolve.",
   "logo": "assets/logo.svg",
   "suggestedPrompts": [

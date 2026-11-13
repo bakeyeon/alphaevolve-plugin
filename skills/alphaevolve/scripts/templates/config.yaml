@@ -1,0 +1,25 @@
+# OpenEvolve configuration (Mode B). Mode A (agent-driven) does not read this file.
+# Check option names against the OpenEvolve version you install; they change between releases.
+max_iterations: 50
+checkpoint_interval: 10
+log_level: INFO
+
+llm:
+  # Any OpenAI-compatible endpoint works. Gemini's free tier is enough for small runs,
+  # but each iteration is one or more LLM calls, so free-tier rate limits make long runs slow.
+  api_base: "https://generativelanguage.googleapis.com/v1beta/openai/"
+  primary_model: "gemini-2.5-flash"
+  secondary_model: "gemini-2.5-pro"
+  temperature: 0.7
+
+database:
+  population_size: 40
+  num_islands: 4
+  # Must match metric names returned by evaluator.py
+  feature_dimensions:
+    - "complexity"
+    - "runtime_ms"
+
+evaluator:
+  timeout: 30
+  cascade_evaluation: false
