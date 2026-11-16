@@ -1,17 +1,42 @@
 # OpenEvolve configuration (Mode B). Mode A (agent-driven) does not read this file.
 # Check option names against the OpenEvolve version you install; they change between releases.
+#
+# Before you run:
+#   Set your Claude API key in the environment (never in this file):
+#     PowerShell:  $env:ANTHROPIC_API_KEY = "your key"
+#     bash/zsh:    export ANTHROPIC_API_KEY="your key"
+#
+# Things to know:
+#   - Cost: every iteration makes one or more paid API calls, so 50 iterations cost about 50 times
+#     one call. Start with a short trial (for example --iterations 5) and check your usage.
+#     For lower cost, set both model names below to "claude-sonnet-5-5".
+#   - Anthropic describes its OpenAI compatibility layer as meant for testing and comparing models,
+#     not as a long-term production setup. It is fine for personal experiments like this one.
+#   - Inside Claude Code, Mode A is simpler and needs no API key at all: the agent writes the
+#     mutations and evolve_local.py scores them. Try Mode A first when you are learning.
+#   - The settings marked "Claude" below were checked against OpenEvolve's source and the
+#     Claude docs, but not yet in a real run. If a call fails, compare them with your installed version.
 max_iterations: 50        # number of mutate-and-evaluate rounds
 checkpoint_interval: 10   # save the population every N iterations, so a run can resume
 log_level: INFO
-# The API key is not stored here. Set it as an environment variable (OPENAI_API_KEY in most versions).
 
 llm:
-  # Any OpenAI-compatible endpoint works. Gemini's free tier is enough for small runs,
-  # but each iteration is one or more LLM calls, so free-tier rate limits make long runs slow.
-  api_base: "https://generativelanguage.googleapis.com/v1beta/openai/"
-  primary_model: "gemini-2.5-flash"   # fast model, used for most mutations
-  secondary_model: "gemini-2.5-pro"   # stronger model, used less often for bigger ideas
-  temperature: 0.7                    # higher means more varied mutations
+  # OpenEvolve talks to any OpenAI-compatible endpoint, so no OpenAI account is needed.
+  # This uses the Claude API's OpenAI compatibility layer.
+  api_base: "https://api.anthropic.com/v1/"
+  # Read from the ANTHROPIC_API_KEY environment variable when the config loads, so the key never sits in this file.
+  # It must be set, or loading fails. OpenEvolve does not fall back to OPENAI_API_KEY when a config file is used.
+  api_key: "${ANTHROPIC_API_KEY}"
+  primary_model: "claude-opus-5-5"     # used for most mutations
+  secondary_model: "claude-sonnet-5-5" # used less often; a different model adds variety
+  # Claude 4.7 and later reject temperature below 1 and reject top_p entirely here,
+  # so keep temperature at 1.0 and top_p unset. Mutation variety comes from sampling and islands.
+  temperature: 1.0   # Claude: values below 1 return a 400 error
+  top_p: null        # Claude: must stay unset
+  # Claude 5 models think before answering, and thinking counts toward max_tokens.
+  # A low limit can cut a program off halfway, so leave plenty of room.
+  max_tokens: 16000
+  timeout: 300   # seconds per LLM call; thinking makes calls slower than OpenEvolve's default
 
 database:
   population_size: 40   # how many programs are kept alive at once

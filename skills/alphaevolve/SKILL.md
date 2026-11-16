@@ -84,7 +84,7 @@ pip install openevolve
 python -m openevolve.cli ./evolve_workspace/initial_program.py ./evolve_workspace/evaluator.py \
     --config ./evolve_workspace/config.yaml --iterations 50
 ```
-Needs an API key for an OpenAI-compatible endpoint (for example `OPENAI_API_KEY`, or a Gemini key with the OpenAI-compatible base URL in `config.yaml`). Ask the user to set it in their environment; never write keys into files. Option names in `config.yaml` can differ between OpenEvolve versions, so check them against the installed version.
+Needs an API key for an OpenAI-compatible endpoint. The template uses the Claude API: `config.yaml` reads `ANTHROPIC_API_KEY` through `api_key: "${ANTHROPIC_API_KEY}"`. To use another provider, change `api_base`, the model names and that variable together. Ask the user to set the key in their environment; never write keys into files. Option names in `config.yaml` can differ between OpenEvolve versions, so check them against the installed version.
 
 ## Reference repositories
 - DeepMind results: `https://github.com/google-deepmind/alphaevolve_results`
