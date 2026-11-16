@@ -140,6 +140,32 @@ Say these limits out loud in any write-up:
 | The code is wrong or crashes | Evolution improves working code; it does not debug | ask the agent to fix the bug |
 | A script you will run once | Saving seconds does not matter | the simplest version that works |
 
+### Starting prompt: does it fit my research?
+
+Not sure? Paste this into Claude Code (or any agent that can read web pages) and fill in the brackets.
+It works whether or not the plugin is installed.
+
+```text
+Read https://github.com/bakeyeon/alphaevolve-plugin (the README and skills/alphaevolve/SKILL.md).
+Then analyze whether any part of my research could use this plugin.
+
+My research: [what you study, what data you have, what is slow, repetitive, or hard to decide]
+
+Answer in this order:
+1. Candidate parts: each piece of my work that could become a program to evolve.
+2. For each part, the three-question check from the README (machine-gradable like a
+   multiple-choice exam? can the grading check the rules? seconds per grading?), yes or no with a reason.
+3. For each "yes": what the program would be, the score, the rules, and which data to hold back.
+4. For each "no": why, and what I should use instead.
+5. Your recommendation: the one best place to start, or "this plugin is not a good fit".
+Use plain language; I am not a programmer. Do not write code yet.
+```
+
+Variations, used in place of the "My research" line:
+- **You have code:** *"My analysis code is in [folder]. Find the slow parts and the hand-made rules or heuristics, then run the same check on each."*
+- **You have a paper or draft:** *"My draft is [file]. Look at the methods section and run the same check on each step."*
+- **Quick answer:** *"In three sentences, using the README's three-question check: would this plugin help with [task]?"*
+
 ### How a non-programmer starts
 
 1. Describe the problem: *"I assign 300 samples to 96-well plates. Replicates of one sample must not

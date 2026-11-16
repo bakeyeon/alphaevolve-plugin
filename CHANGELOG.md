@@ -8,6 +8,8 @@
 - README: the fit check now asks whether a machine could grade each attempt like a multiple-choice
   exam, with grading examples, the two-assistant test, and research-experiment examples (held-back
   data, backtesting, language divergence) with their limits.
+- README: adds a copy-paste starting prompt that checks whether the plugin fits your research,
+  with variations for code, drafts, and quick answers.
 - README: adds "Local evolve code at a glance", a function-by-function overview of the Mode A scripts.
 - `config.yaml`: OpenEvolve (Mode B) now uses the Claude API through `ANTHROPIC_API_KEY`, with
   settings Claude accepts and comments on cost and setup.
