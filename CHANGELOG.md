@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- README: adds "Is this plugin right for my problem?" with a three-question check, good-fit and
+  not-needed use cases across fields, guidance for large training code, and a start guide for
+  non-programmers (English and Korean).
+- README: adds "Local evolve code at a glance", a function-by-function overview of the Mode A scripts.
+- `config.yaml`: OpenEvolve (Mode B) now uses the Claude API through `ANTHROPIC_API_KEY`, with
+  settings Claude accepts and comments on cost and setup.
+- Explanatory comments in all skill scripts.
+
 ## 1.1.0 (2026-11-13)
 
 ### Evaluator
