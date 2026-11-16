@@ -6,6 +6,17 @@ Commands:
   sample    show parents to mutate next: top scorers + diverse picks
   evaluate  register a candidate file, score it, update best_program.py
   status    best candidate and recent history
+
+One loop iteration in Mode A:
+  1. `sample` to pick a parent program.
+  2. The agent writes a mutated copy of that parent.
+  3. `evaluate --candidate new.py --parent-id gen_XXX --rationale "..."` to score it.
+  Repeat. The archive remembers every attempt; best_program.py always holds the winner.
+
+Workspace files:
+  archive.json         every generation with its parent, rationale and metrics
+  candidates/gen_*.py  a frozen copy of each evaluated program
+  best_program.py      copy of the highest scoring valid candidate
 """
 
 import argparse
@@ -19,6 +30,7 @@ from pathlib import Path
 
 
 def load_evaluator(workspace: Path):
+    """Imports the workspace's evaluator.py, so each workspace can have its own evaluator."""
     spec = importlib.util.spec_from_file_location("evaluator", str(workspace / "evaluator.py"))
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
@@ -37,18 +49,21 @@ def save_archive(workspace: Path, data: dict) -> None:
 
 
 def _score(g: dict) -> float:
+    # A generation without a score sorts last instead of raising an error.
     return g["metrics"].get("combined_score", float("-inf"))
 
 
 def _valid(g: dict) -> bool:
+    # Evaluators that do not report "valid" are treated as valid.
     return bool(g["metrics"].get("valid", 1.0))
 
 
 def _entry(workspace: Path, gen_id: str, parent_id, path: Path, rationale: str, metrics: dict) -> dict:
+    """One archive record. parent_id links generations into a family tree."""
     return {
         "id": gen_id,
         "parent_id": parent_id,
-        "path": path.relative_to(workspace).as_posix(),
+        "path": path.relative_to(workspace).as_posix(),   # relative, so the workspace can be moved
         "rationale": rationale,
         "metrics": metrics,
         "code_length": len(path.read_text(encoding="utf-8")),
@@ -57,15 +72,18 @@ def _entry(workspace: Path, gen_id: str, parent_id, path: Path, rationale: str, 
 
 
 def _update_best(workspace: Path, archive: dict) -> None:
+    """Points best_id at the top valid generation and copies it to best_program.py."""
     valid = [g for g in archive["generations"] if _valid(g)]
     if valid:
         # Ties on score go to the earlier (usually simpler) program.
+        # max() keeps the first maximum it sees, and generations are stored in order.
         best = max(valid, key=_score)
         archive["best_id"] = best["id"]
         shutil.copyfile(workspace / best["path"], workspace / "best_program.py")
 
 
 def cmd_init(workspace: Path) -> None:
+    """Starts a fresh archive with initial_program.py as gen_000. Overwrites any old archive."""
     candidates = workspace / "candidates"
     candidates.mkdir(parents=True, exist_ok=True)
     gen0 = candidates / "gen_000.py"
@@ -82,16 +100,24 @@ def cmd_sample(workspace: Path, k: int, seed: int | None) -> None:
     gens = [g for g in load_archive(workspace)["generations"] if _valid(g)]
     if not gens:
         raise SystemExit("archive is empty or has no valid candidates; run init first")
+
+    # Exploit: the k best programs. Mutating these refines what already works.
     top = sorted(gens, key=_score, reverse=True)[:k]
     rest = [g for g in gens if g not in top]
+
+    # Explore: up to 2 programs from different size buckets. Mutating only the top
+    # programs makes the population converge on one idea; these keep other ideas alive.
+    # This is a lightweight stand-in for OpenEvolve's MAP-Elites grid.
     rng = random.Random(seed)
     explore = []
     if rest:
         by_bucket: dict[int, list] = {}
         for g in rest:
+            # Bucket by code length in steps of 500 characters (0-499, 500-999, ...).
             by_bucket.setdefault(g["code_length"] // 500, []).append(g)
         for bucket in rng.sample(sorted(by_bucket), min(2, len(by_bucket))):
             explore.append(rng.choice(by_bucket[bucket]))
+
     fmt = lambda g, role: {"role": role, "id": g["id"], "score": _score(g), "path": g["path"],
                            "rationale": g["rationale"], "metrics": g["metrics"]}
     print(json.dumps([fmt(g, "exploit") for g in top] + [fmt(g, "explore") for g in explore],
@@ -99,12 +125,16 @@ def cmd_sample(workspace: Path, k: int, seed: int | None) -> None:
 
 
 def cmd_evaluate(workspace: Path, candidate: Path, parent_id: str, rationale: str) -> None:
+    """Scores one candidate, stores it as the next generation and reports the change vs its parent."""
     archive = load_archive(workspace)
     if not archive["generations"]:
         raise SystemExit("run init first")
+    # Generation ids are sequential: gen_000, gen_001, ...
     gen_id = f"gen_{len(archive['generations']):03d}"
     stored = workspace / "candidates" / f"{gen_id}.py"
     stored.parent.mkdir(parents=True, exist_ok=True)
+    # Copy first, then evaluate the copy. Later edits to the original file
+    # cannot change what was scored.
     if candidate.resolve() != stored.resolve():
         shutil.copyfile(candidate, stored)
     metrics = load_evaluator(workspace).evaluate(str(stored))
@@ -113,14 +143,17 @@ def cmd_evaluate(workspace: Path, candidate: Path, parent_id: str, rationale: st
     parent = next((g for g in archive["generations"] if g["id"] == parent_id), None)
     _update_best(workspace, archive)
     save_archive(workspace, archive)
+    # Positive delta: the mutation helped. Negative: it hurt. None: unknown parent id.
     delta = None if parent is None else round(_score(entry) - _score(parent), 6)
     print(json.dumps({"evaluated": entry, "delta_vs_parent": delta, "best_id": archive.get("best_id")},
                      indent=2, ensure_ascii=False))
 
 
 def cmd_status(workspace: Path) -> None:
+    """Prints the best generation and a one-line history of every generation."""
     archive = load_archive(workspace)
     if not archive["generations"]:
+        # No archive yet: still useful to see how the baseline scores.
         metrics = load_evaluator(workspace).evaluate(str(workspace / "initial_program.py"))
         print(json.dumps({"status": "uninitialized", "baseline_metrics": metrics}, indent=2))
         return
@@ -132,6 +165,7 @@ def cmd_status(workspace: Path) -> None:
 
 
 def main() -> None:
+    # Windows consoles default to a legacy code page; force UTF-8 so non-ASCII rationales print.
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
     p = argparse.ArgumentParser(description="Local AlphaEvolve runner")

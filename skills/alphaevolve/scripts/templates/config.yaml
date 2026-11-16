@@ -1,25 +1,28 @@
 # OpenEvolve configuration (Mode B). Mode A (agent-driven) does not read this file.
 # Check option names against the OpenEvolve version you install; they change between releases.
-max_iterations: 50
-checkpoint_interval: 10
+max_iterations: 50        # number of mutate-and-evaluate rounds
+checkpoint_interval: 10   # save the population every N iterations, so a run can resume
 log_level: INFO
+# The API key is not stored here. Set it as an environment variable (OPENAI_API_KEY in most versions).
 
 llm:
   # Any OpenAI-compatible endpoint works. Gemini's free tier is enough for small runs,
   # but each iteration is one or more LLM calls, so free-tier rate limits make long runs slow.
   api_base: "https://generativelanguage.googleapis.com/v1beta/openai/"
-  primary_model: "gemini-2.5-flash"
-  secondary_model: "gemini-2.5-pro"
-  temperature: 0.7
+  primary_model: "gemini-2.5-flash"   # fast model, used for most mutations
+  secondary_model: "gemini-2.5-pro"   # stronger model, used less often for bigger ideas
+  temperature: 0.7                    # higher means more varied mutations
 
 database:
-  population_size: 40
-  num_islands: 4
+  population_size: 40   # how many programs are kept alive at once
+  num_islands: 4        # separate sub-populations that evolve apart, which preserves diversity
+  # MAP-Elites keeps the best program in each cell of a grid built from these features,
+  # so a short or fast program survives even if a longer one scores slightly higher.
   # Must match metric names returned by evaluator.py
   feature_dimensions:
     - "complexity"
     - "runtime_ms"
 
 evaluator:
-  timeout: 30
-  cascade_evaluation: false
+  timeout: 30                # seconds; keep it above TIMEOUT_S in evaluator.py so the inner limit fires first
+  cascade_evaluation: false  # true would run cheap checks first and skip full scoring for weak candidates
