@@ -32,25 +32,49 @@ Works with Claude Code and Antigravity.
 ## Is this plugin right for my problem?
 
 You do not need to be a programmer. You describe the problem in plain words; the agent writes the code,
-the scoring script, and runs the loop. What you bring is domain knowledge: what a good answer looks like
+the grading script, and runs the loop. What you bring is domain knowledge: what a good answer looks like
 and which answers are not allowed.
 
 **The idea in one picture.** Evolution here is "try many variations of a recipe, taste each one, keep
 the best, repeat". It only works if tasting is automatic, fast, and fair. So ask three questions:
 
-1. **Can a short script give each attempt a number score?** (Higher is better: fewer wasted slots,
-   lower cost, faster run, higher accuracy on a fixed test set.)
-2. **Can that script check that an answer is allowed?** (No rule broken, same result as a trusted
-   slow version.)
-3. **Does one scoring run take seconds, not hours?** Evolution needs tens to hundreds of attempts.
+1. **Could a machine grade each attempt, like a multiple-choice exam rather than an essay?**
+   The grading may only count, measure, and compare. No human judgment.
+2. **Can the grading also check that an answer is allowed?** (No rule broken, same result as a
+   trusted slow version.)
+3. **Does grading one attempt take seconds, not hours?** Evolution needs tens to hundreds of attempts.
 
 Three yes answers: this plugin fits. Any no: a simpler route is usually better.
 
-### Good fits
+### What "a machine can grade it" means
+
+| Problem | How it is graded | Done by |
+|---|---|---|
+| Placing samples on 96-well plates | count replicate pairs that share a plate; 0 is perfect | counting |
+| Booking shared instruments | add up every request's waiting time; lower is better | measuring |
+| A slow preprocessing function | time it with a stopwatch, and check its output equals the original | measuring, comparing |
+| A classification rule | count correct answers on 500 labeled examples | counting, comparing |
+| Packing training batches | count the padding slots | counting |
+
+Hard to grade by machine: "Is this figure pretty?", "Is this abstract persuasive?", "Is this hypothesis
+new?" Different people give different scores, and the same person may score differently tomorrow.
+
+**The two-assistant test.** Explain your grading rule to two research assistants. If they would always
+give the same number, a script can grade it too.
+
+**Split a vague goal into countable parts.** "Is this a good experimental design?" cannot be graded as
+it is, but its parts can: equal sample counts per condition (count the difference), controls spread
+evenly across days (measure the imbalance), total cost within budget (compare).
+
+You can ask an AI to "rate this from 1 to 10", but those scores wobble, and evolution tends to learn to
+please the AI grader instead of solving the problem. Do not use it as the main score.
+
+### Good fits: tasks
 
 | Field | Problem in plain words | Score | Rule that must hold |
 |---|---|---|---|
 | Lab biology | Place samples on 96-well plates so replicates and controls are spread out | fewer constraint violations, better balance | every sample placed exactly once |
+| Psychology | Order stimuli for each participant so no item is always early or late (counterbalancing) | position and order imbalance | every participant sees every item once |
 | Any lab | Book shared instruments (sequencer, microscope) for many requests | total waiting time | no double booking, deadlines met |
 | Linguistics, NLP | A text-cleaning or tokenizing function is too slow on a large corpus | run time on a fixed sample | output identical to the current function |
 | Bioinformatics | A custom sequence-scoring function is the bottleneck of a pipeline | run time, memory | same scores as the original |
@@ -65,12 +89,52 @@ result. The evaluator template measures run time; for memory, ask the agent to a
 metric (for example with `tracemalloc`, or `torch.cuda.max_memory_allocated` on a GPU).
 Then put the improved piece back into the full training code and confirm the gain there.
 
-### Not needed, use something simpler
+### Good fits: research experiments that look for a rule in data
+
+Evolution can also search for an explanation: a small, readable program (a set of rules, a formula,
+or a simple simulation) that reproduces your data. The program is the hypothesis, and you can read it.
+One principle makes this work:
+
+**Grade only on data the program has not seen.** Hold part of the data back, by time or by item, and
+grade the program on that part alone. Otherwise evolution memorizes your data and the score means
+nothing. A forecast cannot be graded against a future that has not happened, so pretend an earlier
+year is "now" and grade the forecast against what really happened after it (this is called backtesting).
+
+**Worked example: how language varieties diverge, and where they are heading.**
+Turn the question into a gradable one. Two versions:
+
+1. **Sound-change rules.** Data: older word forms and their attested forms in several dialects.
+   Evolve: an ordered list of sound-change rules that turns the old forms into each dialect's forms.
+   Grade: how many letters are wrong (edit distance) between predicted and attested forms, on words
+   held back from training. Rule: only general sound rules, no per-word exceptions, so the program cannot
+   simply store the answers. What you learn: a candidate rule order for each dialect, and the words that
+   resist it, which may point to borrowing.
+2. **Trends in variant use.** Data: how often each competing variant (for example two endings) appears
+   per decade and region, from corpora or surveys. Evolve: a small model of change, such as a formula or a
+   simulation of speakers who copy neighbors and prestige forms. Grade: fit on 1950 to 1990, predict 2000
+   to 2020, and measure the error against what was observed. Then run the best model forward to project
+   the trend.
+
+| Field | Evolve | Grade on held-back data |
+|---|---|---|
+| Linguistics | a rule that guesses a speaker's dialect from a word list | accuracy on held-back speakers |
+| Ecology | a population-growth rule with weather as input | error when predicting later years of counts |
+| Epidemiology | a short-term case-forecasting rule | backtest error on past weeks |
+
+Say these limits out loud in any write-up:
+- **A good fit does not prove the cause.** Several different programs may fit equally well. Compare the
+  top few, not only the winner, and judge them with your domain knowledge.
+- **Little data means easy overfitting.** Keep the program small and the held-back data untouched.
+- **Forecasts get less certain the further they go.** Report them as scenarios together with the
+  backtest error, not as facts.
+
+### Not needed: use something simpler
 
 | Situation | Why evolution does not help | Use instead |
 |---|---|---|
 | A standard task with a known method (sorting, shortest path, linear regression, alignment) | Experts already found the best method | an existing library; ask the agent which one |
 | Tuning a few numbers (learning rate, thresholds) | Searching numbers, not code | grid search or a tuner such as Optuna |
+| Testing whether an effect is real (group A vs group B) | That is a statistics question, not a search | a standard statistical test |
 | No automatic score (writing quality, figure design, "is this hypothesis interesting") | Nothing to compare attempts by | ask the agent directly, judge it yourself |
 | Each evaluation takes minutes to hours (a full training run, an overnight simulation, a wet-lab experiment) | Hundreds of attempts would take weeks | shrink to a fast proxy problem first, or optimize by hand |
 | The code is wrong or crashes | Evolution improves working code; it does not debug | ask the agent to fix the bug |
@@ -80,9 +144,10 @@ Then put the improved piece back into the full training code and confirm the gai
 
 1. Describe the problem: *"I assign 300 samples to 96-well plates. Replicates of one sample must not
    share a plate, and each plate needs 4 controls. Make the plates as balanced as possible."*
-2. The agent writes a simple, obviously correct version (L1) and a scoring script.
-3. **Check the scoring script yourself.** Ask the agent to show a few example answers with their scores
-   and rule checks. If a bad answer gets a good score, say so: the score is what evolution chases.
+2. The agent writes a simple, obviously correct version (L1) and a grading script.
+3. **Check the grading script yourself.** Ask the agent to show a few example answers with their scores
+   and rule checks, and apply the two-assistant test. If a bad answer gets a good score, say so: the
+   score is what evolution chases.
 4. Run the Mode A loop and read `best_program.py` and the score history with the agent.
 
 ## Recommended path: three levels, then evolve
