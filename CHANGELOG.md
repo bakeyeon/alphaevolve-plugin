@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- README: the main grading check is now "ask the agent to write the grading rule as code, with no AI
+  calls or human judgment". The two-assistant test stays as a thought experiment, and comparing two
+  agent sessions is described as a warning sign only, since agreement between copies of one model is not proof.
+
 ## 1.2.0 (2026-11-16)
 
 - README: adds "Is this plugin right for my problem?" with a three-question check, good-fit and

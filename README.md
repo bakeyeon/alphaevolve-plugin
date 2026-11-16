@@ -59,8 +59,19 @@ Three yes answers: this plugin fits. Any no: a simpler route is usually better.
 Hard to grade by machine: "Is this figure pretty?", "Is this abstract persuasive?", "Is this hypothesis
 new?" Different people give different scores, and the same person may score differently tomorrow.
 
-**The two-assistant test.** Explain your grading rule to two research assistants. If they would always
-give the same number, a script can grade it too.
+**Test it: can the rule become code?** Ask the agent:
+*"Write this grading rule as a Python function. Use only counting, measuring, and comparing: no AI
+calls and no human judgment."* If it can, a machine can grade it. If the function needs a step like
+"ask an AI" or "judge whether it is appropriate", it cannot. The evolution loop needs exactly this
+script anyway, so this is the most direct test.
+
+*Thought experiment:* imagine handing the rule to two research assistants. Would they always give the
+same number? If not, the rule is still vague.
+
+*Two agents as a warning sign:* you can give the same rule and the same example answers to two
+separate agent sessions. If their scores differ, the rule is vague. If they match, that is not proof:
+two copies of the same model think alike and can agree even on vague questions such as "is this
+abstract persuasive?".
 
 **Split a vague goal into countable parts.** "Is this a good experimental design?" cannot be graded as
 it is, but its parts can: equal sample counts per condition (count the difference), controls spread
@@ -172,7 +183,7 @@ Variations, used in place of the "My research" line:
    share a plate, and each plate needs 4 controls. Make the plates as balanced as possible."*
 2. The agent writes a simple, obviously correct version (L1) and a grading script.
 3. **Check the grading script yourself.** Ask the agent to show a few example answers with their scores
-   and rule checks, and apply the two-assistant test. If a bad answer gets a good score, say so: the
+   and rule checks, and ask whether the rule could be written as code. If a bad answer gets a good score, say so: the
    score is what evolution chases.
 4. Run the Mode A loop and read `best_program.py` and the score history with the agent.
 
