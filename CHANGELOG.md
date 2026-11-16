@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.2.0 (2026-11-16)
 
 - README: adds "Is this plugin right for my problem?" with a three-question check, good-fit and
   not-needed use cases across fields, guidance for large training code, and a start guide for
@@ -13,6 +13,9 @@
 - README: adds "Local evolve code at a glance", a function-by-function overview of the Mode A scripts.
 - `config.yaml`: OpenEvolve (Mode B) now uses the Claude API through `ANTHROPIC_API_KEY`, with
   settings Claude accepts and comments on cost and setup.
+  **Note:** Mode B workspaces created from this template now need `ANTHROPIC_API_KEY`. To keep another
+  provider such as Gemini, change `api_base`, the model names and `api_key` together.
+  Existing workspaces keep their own `config.yaml` and are not affected.
 - Explanatory comments in all skill scripts.
 
 ## 1.1.0 (2026-11-13)
