@@ -31,6 +31,9 @@ N_INSTANCES = 40      # random instances (plus edge cases below)
 REPEATS = 3           # timing repeats per instance; the median is used
 TIMEOUT_S = 20        # wall-clock limit for one candidate, all instances together
 MAX_CODE_CHARS = 8000 # guards against embedding a lookup table of per-item answers
+BLIND_MODE = True     # GDPR / private-data protection (default ON): strips exception messages,
+                      # candidate stderr/prints, and raw item values from error reports so that
+                      # no corpus text or participant data can leak into the agent context.
 
 # Runs inside the child process: imports the candidate, solves every case, times solve() only.
 # It is a string because it is passed to `python -c`. The parent sends the test cases on
@@ -38,29 +41,38 @@ MAX_CODE_CHARS = 8000 # guards against embedding a lookup table of per-item answ
 # Tip for corpus / CSV / TSV tasks: instead of piping a large dataset through stdin,
 # load the dataset file read-only inside _RUNNER (or pass its path via sys.argv).
 _RUNNER = r"""
-import contextlib, importlib.util, json, statistics, sys, time
-path, repeats = sys.argv[1], int(sys.argv[2])
+import contextlib, importlib.util, json, pathlib, statistics, sys, time, traceback
+path, repeats, blind = sys.argv[1], int(sys.argv[2]), sys.argv[3] == "1"
 cases = json.load(sys.stdin)
 # Keep a handle on the real stdout before redirecting, so only our JSON goes there.
 real_stdout = sys.stdout
 answers, total = [], 0.0
-with contextlib.redirect_stdout(sys.stderr):   # candidate prints must not corrupt the result
-    # Import the candidate file as a module. Import time is not part of the timing below.
-    spec = importlib.util.spec_from_file_location("candidate", path)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    for items, cap in cases:
-        items = [tuple(x) for x in items]       # JSON turns tuples into lists; restore them
-        times = []
-        for _ in range(repeats):
-            t = time.perf_counter()
-            res = mod.solve(list(items), cap)   # fresh copy: candidates may mutate input
-            times.append(time.perf_counter() - t)
-        # Only the last answer is kept; repeats exist for timing, not for scoring.
-        answers.append([int(i) for i in res])
-        # Median is robust to one slow repeat (GC pause, OS scheduling).
-        total += statistics.median(times)
-json.dump({"answers": answers, "solve_ms": total * 1000.0}, real_stdout)
+try:
+    with contextlib.redirect_stdout(sys.stderr):   # candidate prints must not corrupt the result
+        # Import the candidate file as a module. Import time is not part of the timing below.
+        spec = importlib.util.spec_from_file_location("candidate", path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        for items, cap in cases:
+            items = [tuple(x) for x in items]       # JSON turns tuples into lists; restore them
+            times = []
+            for _ in range(repeats):
+                t = time.perf_counter()
+                res = mod.solve(list(items), cap)   # fresh copy: candidates may mutate input
+                times.append(time.perf_counter() - t)
+            # Only the last answer is kept; repeats exist for timing, not for scoring.
+            answers.append([int(i) for i in res])
+            # Median is robust to one slow repeat (GC pause, OS scheduling).
+            total += statistics.median(times)
+    json.dump({"ok": True, "answers": answers, "solve_ms": total * 1000.0}, real_stdout)
+except BaseException as exc:
+    # In BLIND_MODE, never include str(exc) or raw stderr: exceptions like KeyError('secret_word')
+    # or ValueError(f"bad token {row}") would leak private corpus text to the cloud agent.
+    frames = [f"{pathlib.Path(f.filename).name}:{f.lineno} in {f.name}"
+              for f in traceback.extract_tb(exc.__traceback__)]
+    loc = " -> ".join(frames[-3:]) if frames else "unknown location"
+    err = f"{type(exc).__name__} at {loc}" if blind else f"{type(exc).__name__}: {exc} ({loc})"
+    json.dump({"ok": False, "error": err}, real_stdout)
 """
 
 
@@ -120,7 +132,7 @@ def evaluate(program_path: str, held_out: bool = False) -> dict[str, Any]:
     # Step 1: run the candidate in its own process with a hard time limit.
     try:
         proc = subprocess.run(
-            [sys.executable, "-c", _RUNNER, str(program_path), str(REPEATS)],
+            [sys.executable, "-c", _RUNNER, str(program_path), str(REPEATS), "1" if BLIND_MODE else "0"],
             input=json.dumps(cases),
             capture_output=True,
             text=True,
@@ -128,23 +140,28 @@ def evaluate(program_path: str, held_out: bool = False) -> dict[str, Any]:
         )
     except subprocess.TimeoutExpired:
         return _fail(f"timeout: candidate took longer than {TIMEOUT_S}s")
-    if proc.returncode != 0:
-        # Keep only the tail of stderr: the traceback's last lines say what went wrong.
-        return _fail("candidate crashed: " + proc.stderr.strip()[-800:])
     try:
         out = json.loads(proc.stdout)
     except json.JSONDecodeError:
-        return _fail("invalid runner output: " + proc.stdout[:200])
+        if BLIND_MODE:
+            return _fail(f"candidate process exited with code {proc.returncode} (output redacted in BLIND_MODE)")
+        return _fail("invalid runner output: " + (proc.stderr or proc.stdout).strip()[-400:])
+    if not out.get("ok", True):
+        return _fail("candidate crashed: " + out.get("error", "unknown error"))
 
     # Step 2: check every answer. One invalid answer rejects the whole candidate,
     # so evolution cannot trade correctness for a higher average.
     ratios, n_optimal = [], 0
-    for (items, capacity), chosen in zip(cases, out["answers"]):
+    for idx, ((items, capacity), chosen) in enumerate(zip(cases, out["answers"])):
         # Each index must be in range and used at most once.
         if len(set(chosen)) != len(chosen) or any(i < 0 or i >= len(items) for i in chosen):
+            if BLIND_MODE:
+                return _fail(f"invalid indices (duplicate or out-of-range index on instance #{idx})")
             return _fail(f"invalid indices {chosen[:10]} for {len(items)} items")
         weight = sum(items[i][1] for i in chosen)
         if weight > capacity:
+            if BLIND_MODE:
+                return _fail(f"constraint violated: capacity exceeded on instance #{idx}")
             return _fail(f"constraint violated: weight={weight} > capacity={capacity}")
         # Step 3: score quality as value / optimum, so 1.0 means optimal on that instance.
         value = sum(items[i][0] for i in chosen)

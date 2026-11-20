@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.0 (2026-11-20)
+
+- `evaluator.py`: enables **`BLIND_MODE = True` by default** for GDPR / private-corpus protection. Crash reports now strip exception message strings and raw `stderr` (reporting only exception type and file/line location), and constraint failures omit raw data values so corpus text or participant data cannot leak into the cloud agent context.
+- `SKILL.md` & README: adds a dedicated guide for working with private or GDPR/IRB-regulated datasets (using a 3-row synthetic schema sample, keeping `BLIND_MODE = True`, and optional air-gapped local LLM execution via Mode B).
+
 ## 1.3.0 (2026-11-20)
 
 - `evaluator.py` & `evolve_local.py`: adds built-in **held-out verification** (`HELD_OUT_SEED`, `evaluate(path, held_out=True)`, `evaluator.py --held-out`, and `evolve_local.py status --held-out`) so `best_program.py` can be tested on data never seen during evolution.

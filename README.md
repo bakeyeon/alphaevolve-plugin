@@ -187,6 +187,20 @@ Variations, used in place of the "My research" line:
    score is what evolution chases.
 4. Run the Mode A loop and read `best_program.py` and the score history with the agent.
 
+## Working with private or GDPR-protected data (corpora, participant records)
+
+Because AlphaEvolve separates **code generation** from **local evaluation**, the cloud agent only needs to see Python code and aggregate numeric scores—never your raw dataset.
+
+To prevent accidental data leaks through crash tracebacks or debug prints, **`BLIND_MODE = True` is enabled by default** in `evaluator.py`:
+- **Redacted crash reports**: If a candidate crashes (e.g., `KeyError('secret_word')` or `ValueError(raw_sentence)`), `BLIND_MODE` strips the exception message and raw `stderr`, returning only the exception type and line number (`KeyError at candidate.py:24 in solve`).
+- **Silent stdout/stderr**: Anything a candidate prints is captured and discarded before results return to the agent.
+- **Aggregate-only rule failures**: Constraint errors report only the instance index and rule name, never raw item values.
+
+**Three rules for strict GDPR / IRB datasets:**
+1. **Give the agent a 3-row fake schema, not the real file.** Keep the real corpus outside the project folder (or block agent file reads via `.claude/settings.json` `permissions.deny`), and put a 3-line synthetic file (`dummy_sample.tsv`) in the workspace so the agent knows the column format.
+2. **Keep `BLIND_MODE = True` in `evaluator.py`.** Have `evaluator.py` read the real local dataset path directly inside `_RUNNER` and return only aggregate numbers (`combined_score`, error counts by category).
+3. **Need a 100% offline air-gap?** Use Mode B (`openevolve`) with `api_base: "http://localhost:11434/v1"` pointed at a local LLM (Ollama, LM Studio, or vLLM) with network disconnected.
+
 ## Recommended path: three levels, then evolve
 
 1. **L1 baseline**: a direct, obviously correct implementation of the definition. It becomes the evaluator's reference.
