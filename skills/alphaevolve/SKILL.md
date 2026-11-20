@@ -41,6 +41,9 @@ A good ladder before evolving:
 
 - **Judge correctness against a trusted reference** (exact solver or the L1 baseline). Invalid output scores 0.
 - **Use many seeded random instances plus edge cases**, not a few hard-coded ones. Otherwise evolution memorises answers.
+- **Hold back a separate verification split (`held_out=True`).** Keep a second seed or held-out data slice untouched during evolution, and check `best_program.py` on it only at the end (`status --held-out` or `evaluator.py best_program.py --held-out`).
+- **Prevent per-item memorisation (`MAX_CODE_CHARS`).** For rule-discovery tasks (e.g. linguistics, empirical formulas), reject programs that exceed a size cap or hard-code literal dataset items (`if word == ...`).
+- **Load large corpora/CSV/TSV files directly in the child runner.** Do not pipe large datasets through `stdin` on every evaluation; pass the file path or load read-only inside `_RUNNER`.
 - **Run each candidate in a separate process with a hard timeout.** One infinite loop must not stall the run.
 - **Keep `combined_score` deterministic.** Report runtime separately (median of repeats, import excluded) instead of mixing noisy timings into the score.
 - **Never edit the evaluator to make a candidate pass.** If the evaluator is wrong, fix it, then re-score the whole archive.
@@ -76,7 +79,7 @@ Each generation:
 3. `evaluate` it, read `delta_vs_parent` and any `error`, and use failures as feedback for the next mutation.
 4. If the agent supports subagents, generate several children from different parents in parallel, then evaluate them one by one.
 
-Stop when the score plateaus for several generations or hits the reference optimum. Then present a generation table (`status`) and explain **why** the best program works. Flag improvements you cannot explain: they may not generalise beyond the test instances.
+Stop when the score plateaus for several generations or hits the reference optimum. Then run `status --held-out` to verify that `best_program.py` generalises to the held-out split, present a generation table, and explain **why** the best program works. Flag improvements you cannot explain or that drop sharply on `held_out_metrics`: they may have overfitted the evolution instances.
 
 #### Mode B: OpenEvolve CLI
 ```bash

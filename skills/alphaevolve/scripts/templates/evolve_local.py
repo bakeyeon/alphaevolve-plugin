@@ -149,7 +149,7 @@ def cmd_evaluate(workspace: Path, candidate: Path, parent_id: str, rationale: st
                      indent=2, ensure_ascii=False))
 
 
-def cmd_status(workspace: Path) -> None:
+def cmd_status(workspace: Path, held_out: bool = False) -> None:
     """Prints the best generation and a one-line history of every generation."""
     archive = load_archive(workspace)
     if not archive["generations"]:
@@ -160,8 +160,14 @@ def cmd_status(workspace: Path) -> None:
     best = next((g for g in archive["generations"] if g["id"] == archive.get("best_id")), None)
     table = [{"id": g["id"], "parent": g["parent_id"], "score": _score(g), "rationale": g["rationale"]}
              for g in archive["generations"]]
-    print(json.dumps({"total_generations": len(table), "best_candidate": best, "history": table},
-                     indent=2, ensure_ascii=False))
+    result: dict = {"total_generations": len(table), "best_candidate": best, "history": table}
+    if held_out and best is not None:
+        evaluator = load_evaluator(workspace)
+        try:
+            result["held_out_metrics"] = evaluator.evaluate(str(workspace / best["path"]), held_out=True)
+        except TypeError:
+            result["held_out_metrics"] = {"error": "evaluator.evaluate() does not accept held_out=True"}
+    print(json.dumps(result, indent=2, ensure_ascii=False))
 
 
 def main() -> None:
@@ -176,6 +182,7 @@ def main() -> None:
     p.add_argument("--rationale", default="", help="what the mutation changed and why (evaluate)")
     p.add_argument("-k", type=int, default=3, help="number of top parents (sample)")
     p.add_argument("--seed", type=int, default=None, help="seed for explore picks (sample)")
+    p.add_argument("--held-out", action="store_true", help="also score best_program.py on held-out data (status)")
     a = p.parse_args()
 
     ws = Path(a.workspace).resolve()
@@ -188,7 +195,7 @@ def main() -> None:
             raise SystemExit("--candidate is required for evaluate")
         cmd_evaluate(ws, Path(a.candidate), a.parent_id, a.rationale)
     else:
-        cmd_status(ws)
+        cmd_status(ws, held_out=a.held_out)
 
 
 if __name__ == "__main__":

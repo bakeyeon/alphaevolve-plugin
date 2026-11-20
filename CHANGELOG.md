@@ -1,9 +1,11 @@
 # Changelog
 
-## Unreleased
+## 1.3.0 (2026-11-20)
 
-- README: adds an Acknowledgements section (AlphaEvolve, OpenEvolve, Antigravity, Claude Code) with a
-  disclaimer that this is an independent community plugin. English and Korean.
+- `evaluator.py` & `evolve_local.py`: adds built-in **held-out verification** (`HELD_OUT_SEED`, `evaluate(path, held_out=True)`, `evaluator.py --held-out`, and `evolve_local.py status --held-out`) so `best_program.py` can be tested on data never seen during evolution.
+- `evaluator.py`: adds `MAX_CODE_CHARS` guard against lookup-table memorisation, plus guidance on loading external corpus/CSV/TSV datasets directly inside `_RUNNER` instead of piping large files over `stdin`.
+- `SKILL.md`: adds evaluator rules for held-out verification, anti-memorisation size caps, and corpus file loading.
+- README & `LICENSE`: adds MIT License and Acknowledgements section (AlphaEvolve, OpenEvolve, Antigravity, Claude Code) clarifying that this is a free, independent community plugin (English and Korean).
 - README: the main grading check is now "ask the agent to write the grading rule as code, with no AI
   calls or human judgment". The two-assistant test stays as a thought experiment, and comparing two
   agent sessions is described as a warning sign only, since agreement between copies of one model is not proof.

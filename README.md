@@ -221,9 +221,11 @@ decides which one is best. The agent writes new programs; these scripts only jud
 - `make_instances(seed, n)`: builds the test set, n seeded random problems plus fixed edge cases.
   The same seed means every candidate is tested on the same problems.
 - `reference_solve(items, capacity)`: the trusted slow solver (exact DP) that gives the true optimum.
-- `evaluate(program_path)`: runs one candidate in a separate process with a time limit, rejects any
-  answer that breaks a rule, and returns metrics: `combined_score`, `valid`, `optimality_ratio`,
-  `optimal_fraction`, `runtime_ms`, `complexity`.
+- `evaluate(program_path, held_out=False)`: rejects oversized programs (`MAX_CODE_CHARS`, to prevent
+  lookup-table memorisation), runs the candidate in a separate process with a time limit, rejects any
+  answer that breaks a rule, and returns metrics: `combined_score`, `valid`, `split`, `optimality_ratio`,
+  `optimal_fraction`, `runtime_ms`, `complexity`. Pass `held_out=True` (or `--held-out` on the CLI)
+  to test on `HELD_OUT_SEED`, which is never touched during evolution.
 - `_fail(error)`: the metrics for a rejected candidate (score 0, `valid` 0, with the reason).
 
 **`evolve_local.py`** (commands)
@@ -232,7 +234,8 @@ decides which one is best. The agent writes new programs; these scripts only jud
   programs of different sizes (explore), so the search does not get stuck on one idea.
 - `evaluate` (`cmd_evaluate`): copies a new candidate into `candidates/`, scores it, records it with
   its parent and rationale, and reports `delta_vs_parent` (positive means the change helped).
-- `status` (`cmd_status`): shows the best generation and a one-line history of all generations.
+- `status` (`cmd_status`): shows the best generation and a one-line history of all generations. Pass
+  `--held-out` at the end of a run to include `held_out_metrics` for `best_program.py`.
 
 **`evolve_local.py`** (helpers)
 - `load_evaluator(workspace)`: imports the workspace's own `evaluator.py`.

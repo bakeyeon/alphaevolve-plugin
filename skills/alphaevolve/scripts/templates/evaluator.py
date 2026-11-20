@@ -25,14 +25,18 @@ from typing import Any
 
 # Knobs to tune when you adapt this file. Changing SEED or N_INSTANCES changes every
 # score, so do not change them in the middle of a run or old scores stop being comparable.
-SEED = 12345          # fixed so every candidate sees the same instances
+SEED = 12345          # fixed so every candidate sees the same evolution instances
+HELD_OUT_SEED = 67890 # untouched seed for final held-out check (--held-out)
 N_INSTANCES = 40      # random instances (plus edge cases below)
 REPEATS = 3           # timing repeats per instance; the median is used
 TIMEOUT_S = 20        # wall-clock limit for one candidate, all instances together
+MAX_CODE_CHARS = 8000 # guards against embedding a lookup table of per-item answers
 
 # Runs inside the child process: imports the candidate, solves every case, times solve() only.
 # It is a string because it is passed to `python -c`. The parent sends the test cases on
 # stdin as JSON and reads the answers back from stdout as JSON.
+# Tip for corpus / CSV / TSV tasks: instead of piping a large dataset through stdin,
+# load the dataset file read-only inside _RUNNER (or pass its path via sys.argv).
 _RUNNER = r"""
 import contextlib, importlib.util, json, statistics, sys, time
 path, repeats = sys.argv[1], int(sys.argv[2])
@@ -100,9 +104,18 @@ def _fail(error: str) -> dict[str, Any]:
     return {"combined_score": 0.0, "valid": 0.0, "error": error}
 
 
-def evaluate(program_path: str) -> dict[str, Any]:
-    """Evaluates a candidate program and returns metrics including combined_score (higher is better)."""
-    cases = make_instances()
+def evaluate(program_path: str, held_out: bool = False) -> dict[str, Any]:
+    """Evaluates a candidate program and returns metrics including combined_score (higher is better).
+
+    Args:
+        program_path: Path to the candidate .py file.
+        held_out: If True, evaluates on HELD_OUT_SEED (unseen during evolution) to check generalisation.
+    """
+    code = Path(program_path).read_text(encoding="utf-8")
+    if len(code) > MAX_CODE_CHARS:
+        return _fail(f"code too long ({len(code)} chars > {MAX_CODE_CHARS}): rules must stay general, not memorise items")
+
+    cases = make_instances(seed=HELD_OUT_SEED if held_out else SEED)
 
     # Step 1: run the candidate in its own process with a hard time limit.
     try:
@@ -141,10 +154,10 @@ def evaluate(program_path: str) -> dict[str, Any]:
 
     # Step 4: build the metrics. Only combined_score decides the best program.
     # runtime_ms and complexity are features for MAP-Elites (diversity), not part of the score.
-    code = Path(program_path).read_text(encoding="utf-8")
     return {
         "combined_score": round(sum(ratios) / len(ratios), 6),
         "valid": 1.0,
+        "split": "held_out" if held_out else "evolve",
         "optimality_ratio": round(sum(ratios) / len(ratios), 6),
         "optimal_fraction": round(n_optimal / len(cases), 4),
         "runtime_ms": round(out["solve_ms"], 3),
@@ -153,6 +166,8 @@ def evaluate(program_path: str) -> dict[str, Any]:
 
 
 if __name__ == "__main__":
-    # Manual check: python evaluator.py some_candidate.py
-    target = sys.argv[1] if len(sys.argv) > 1 else "initial_program.py"
-    print(json.dumps(evaluate(target), indent=2))
+    # Manual check: python evaluator.py [some_candidate.py] [--held-out]
+    args = [a for a in sys.argv[1:] if a != "--held-out"]
+    use_held_out = "--held-out" in sys.argv[1:]
+    target = args[0] if args else "initial_program.py"
+    print(json.dumps(evaluate(target, held_out=use_held_out), indent=2))

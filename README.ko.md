@@ -201,14 +201,14 @@ Mode A에서는 스크립트 세 개가 일을 나눕니다. `scaffold_evolve.py
 **`evaluator.py`**
 - `make_instances(seed, n)`: 테스트 세트를 만듭니다. 시드를 고정한 무작위 문제 n개와 정해진 경계 사례입니다. 시드가 같으니 모든 후보가 같은 문제로 시험받습니다.
 - `reference_solve(items, capacity)`: 진짜 최적값을 주는 믿을 수 있는 느린 풀이(정확한 DP)입니다.
-- `evaluate(program_path)`: 후보 하나를 별도 프로세스에서 시간 제한을 두고 실행하고, 규칙을 어긴 답이 하나라도 있으면 탈락시키고, 지표를 돌려줍니다: `combined_score`, `valid`, `optimality_ratio`, `optimal_fraction`, `runtime_ms`, `complexity`.
+- `evaluate(program_path, held_out=False)`: 코드 길이 상한(`MAX_CODE_CHARS`, 답 외우기 테이블 방지)을 먼저 확인하고, 후보를 별도 프로세스에서 시간 제한을 두고 실행하며, 규칙을 어긴 답이 하나라도 있으면 탈락시키고 지표를 돌려줍니다: `combined_score`, `valid`, `split`, `optimality_ratio`, `optimal_fraction`, `runtime_ms`, `complexity`. `held_out=True`(또는 CLI에서 `--held-out`)를 넘기면 진화 동안 쓰지 않은 `HELD_OUT_SEED` 데이터로 일반화 성능을 검증합니다.
 - `_fail(error)`: 탈락한 후보의 지표입니다(점수 0, `valid` 0, 탈락 이유).
 
 **`evolve_local.py`** (명령)
 - `init` (`cmd_init`): `initial_program.py`를 `gen_000`으로 채점하고 새 `archive.json`을 시작합니다.
 - `sample` (`cmd_sample`): 다음에 변형할 부모를 추천합니다. 최고 점수 후보들(exploit)과 크기가 다른 프로그램 최대 두 개(explore)를 함께 줘서 한 아이디어에 갇히지 않게 합니다.
 - `evaluate` (`cmd_evaluate`): 새 후보를 `candidates/`에 복사해 채점하고, 부모와 변경 이유와 함께 기록하고, `delta_vs_parent`를 알려 줍니다(양수면 변경이 도움이 됨).
-- `status` (`cmd_status`): 최고 세대와 모든 세대의 한 줄 기록을 보여 줍니다.
+- `status` (`cmd_status`): 최고 세대와 모든 세대의 한 줄 기록을 보여 줍니다. 진화가 끝난 뒤 `--held-out` 옵션을 붙이면 `best_program.py`의 미공개 데이터 검증 지표(`held_out_metrics`)를 함께 출력합니다.
 
 **`evolve_local.py`** (보조 함수)
 - `load_evaluator(workspace)`: 작업 폴더에 있는 `evaluator.py`를 불러옵니다.
