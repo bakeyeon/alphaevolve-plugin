@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- README: adds an Acknowledgements section (AlphaEvolve, OpenEvolve, Antigravity, Claude Code) with a
+  disclaimer that this is an independent community plugin. English and Korean.
 - README: the main grading check is now "ask the agent to write the grading rule as code, with no AI
   calls or human judgment". The two-assistant test stays as a thought experiment, and comparing two
   agent sessions is described as a warning sign only, since agreement between copies of one model is not proof.

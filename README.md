@@ -241,3 +241,11 @@ decides which one is best. The agent writes new programs; these scripts only jud
   `best_program.py`. Ties go to the earlier, usually simpler, program.
 
 See [CHANGELOG.md](CHANGELOG.md) for release notes.
+
+## Acknowledgements
+
+- Inspired by the evolutionary coding agent architecture described in **Google DeepMind's [AlphaEvolve](https://deepmind.google/blog/alphaevolve-a-gemini-powered-coding-agent-for-designing-advanced-algorithms/)** research ([`alphaevolve_results`](https://github.com/google-deepmind/alphaevolve_results)).
+- Workspace templates (`# EVOLVE-BLOCK`, `evaluator.py`, `config.yaml`) are designed to interoperate with **[OpenEvolve](https://github.com/algorithmicsuperintelligence/openevolve)** by Algorithmic SuperIntelligence Labs.
+- Built for use with **[Google Antigravity](https://antigravity.google)** and **[Claude Code](https://code.claude.com/docs/en/overview)**.
+
+> *Disclaimer: This is an independent community plugin and is not affiliated with or endorsed by Google DeepMind.*

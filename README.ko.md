@@ -216,3 +216,11 @@ Mode A에서는 스크립트 세 개가 일을 나눕니다. `scaffold_evolve.py
 - `_update_best(workspace, archive)`: 점수가 가장 높은 유효한 세대를 찾아 `best_program.py`로 복사합니다. 점수가 같으면 먼저 나온(보통 더 단순한) 프로그램이 이깁니다.
 
 변경 내역은 [CHANGELOG.md](CHANGELOG.md)를 보세요.
+
+## 감사의 말
+
+- **Google DeepMind의 [AlphaEvolve](https://deepmind.google/blog/alphaevolve-a-gemini-powered-coding-agent-for-designing-advanced-algorithms/)** 연구([`alphaevolve_results`](https://github.com/google-deepmind/alphaevolve_results))에서 소개한 진화형 코딩 에이전트 구조에서 영감을 받았습니다.
+- 작업 폴더 템플릿(`# EVOLVE-BLOCK`, `evaluator.py`, `config.yaml`)은 Algorithmic SuperIntelligence Labs의 **[OpenEvolve](https://github.com/algorithmicsuperintelligence/openevolve)**와 함께 쓸 수 있도록 설계했습니다.
+- **[Google Antigravity](https://antigravity.google)**와 **[Claude Code](https://code.claude.com/docs/en/overview)**에서 쓰도록 만들었습니다.
+
+> *고지: 이 플러그인은 독립적인 커뮤니티 플러그인이며 Google DeepMind와 관련이 없고 Google DeepMind의 보증을 받지 않았습니다.*
