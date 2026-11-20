@@ -31,9 +31,10 @@ N_INSTANCES = 40      # random instances (plus edge cases below)
 REPEATS = 3           # timing repeats per instance; the median is used
 TIMEOUT_S = 20        # wall-clock limit for one candidate, all instances together
 MAX_CODE_CHARS = 8000 # guards against embedding a lookup table of per-item answers
-BLIND_MODE = True     # GDPR / private-data protection (default ON): strips exception messages,
+BLIND_MODE = True     # private-data leak guard (default ON): strips exception messages,
                       # candidate stderr/prints, and raw item values from error reports so that
                       # no corpus text or participant data can leak into the agent context.
+                      # It closes one leak path only; it is not GDPR compliance by itself.
 
 # Runs inside the child process: imports the candidate, solves every case, times solve() only.
 # It is a string because it is passed to `python -c`. The parent sends the test cases on

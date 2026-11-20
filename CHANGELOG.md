@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- README, `SKILL.md`, `evaluator.py` comment: describe `BLIND_MODE` as a leak guard that closes one path
+  (error messages), not GDPR or IRB compliance. Note that a Read deny rule does not block Bash, so the real
+  file belongs outside the project, and that an offline Mode B setup needs `api_base`, model names and
+  `api_key` changed together. English and Korean.
+
 ## 1.4.0 (2026-11-20)
 
 - `evaluator.py`: enables **`BLIND_MODE = True` by default** for GDPR / private-corpus protection. Crash reports now strip exception message strings and raw `stderr` (reporting only exception type and file/line location), and constraint failures omit raw data values so corpus text or participant data cannot leak into the cloud agent context.

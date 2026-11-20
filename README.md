@@ -28,8 +28,9 @@ Works with Claude Code and Antigravity.
    - Tests on 40 seeded random instances plus edge cases, with a separate `--held-out` split for final verification.
    - Runs each candidate in its own process with a time limit and code-length cap (`MAX_CODE_CHARS`).
    - Keeps `combined_score` quality-only, so the same program always gets the same score. Runtime is recorded separately as a median.
-4. **GDPR / private-corpus protection (`BLIND_MODE = True` by default)**
-   - Strips exception messages, candidate `print`/`stderr` output, and raw data values from error reports so private corpus text or participant data does not leak into the cloud agent context.
+4. **Private-data leak guard (`BLIND_MODE = True` by default)**
+   - Strips exception messages, candidate `print`/`stderr` output, and raw data values from error reports, so error messages do not carry private corpus text or participant data into the cloud agent context.
+   It closes one leak path; it does not make a project GDPR compliant on its own.
 
 ## Is this plugin right for my problem?
 
@@ -189,20 +190,24 @@ Variations, used in place of the "My research" line:
    score is what evolution chases.
 4. Run the Mode A loop and read `best_program.py` and the score history with the agent.
 
-## Working with private or GDPR-protected data (corpora, participant records)
+## Working with private or personal data (corpora, participant records)
 
-Because AlphaEvolve separates **code generation** from **local evaluation**, the cloud agent only needs to see Python code and aggregate numeric scores—never your raw dataset.
+Because AlphaEvolve separates **code generation** from **local evaluation**, the cloud agent only needs to see Python code and aggregate numeric scores, not your raw dataset.
 
 To prevent accidental data leaks through crash tracebacks or debug prints, **`BLIND_MODE = True` is enabled by default** in `evaluator.py`:
 - **Redacted crash reports**: If a candidate crashes (e.g., `KeyError('secret_word')` or `ValueError(raw_sentence)`), `BLIND_MODE` strips the exception message and raw `stderr`, returning only the exception type and line number (`KeyError at candidate.py:24 in solve`).
 - **Silent stdout/stderr**: Anything a candidate prints is captured and discarded before results return to the agent.
 - **Aggregate-only rule failures**: Constraint errors report only the instance index and rule name, never raw item values.
 
-**Four rules for strict GDPR / DSGVO / IRB datasets:**
+> **What `BLIND_MODE` does not do.** It closes one leak path: error messages. It does not make your
+> project GDPR or IRB compliant. Under GDPR, pseudonymised data is still personal data, and your legal
+> basis, data-use agreements and ethics approval still apply. Check with your data protection officer or ethics board.
+
+**Four rules for GDPR / DSGVO / IRB-regulated datasets:**
 1. **Pre-mask sensitive identifiers before loading the data.** Even when evaluating locally, always pseudonymise or mask personal identifiers (names, participant IDs, phone numbers, exact addresses, rare clinical/biographical details) into tokens such as `SPK_001`, `[NAME]`, or `[LOC]` before running any experiment.
-2. **Give the agent a 3-row fake schema, not the real file.** Keep the real corpus outside the project folder (or block agent file reads via `.claude/settings.json` `permissions.deny`), and put a 3-line synthetic file (`dummy_sample.tsv`) in the workspace so the agent knows the column format.
+2. **Give the agent a 3-row fake schema, not the real file.** Keep the real corpus outside the project folder, and put a 3-line synthetic file (`dummy_sample.tsv`) in the workspace so the agent knows the column format. A `permissions.deny` rule in `.claude/settings.json` is only a backup: blocking Read does not stop the agent from opening the file through Bash (`cat`, `python`).
 3. **Keep `BLIND_MODE = True` in `evaluator.py`.** Have `evaluator.py` read the real local dataset path directly inside `_RUNNER` and return only aggregate numbers (`combined_score`, error counts by category).
-4. **Need a 100% offline air-gap?** Use Mode B (`openevolve`) with `api_base: "http://localhost:11434/v1"` pointed at a local LLM (Ollama, LM Studio, or vLLM) with network disconnected.
+4. **Need a fully offline setup?** Use Mode B (`openevolve`) with a local LLM (Ollama, LM Studio, or vLLM). In `config.yaml`, change `api_base` (for Ollama, `http://localhost:11434/v1`), the model names, and `api_key` together, since the template is set up for Claude. Mode A always uses your cloud agent, so it is not offline.
 
 ## Recommended path: three levels, then evolve
 
