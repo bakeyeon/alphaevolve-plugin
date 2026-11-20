@@ -25,9 +25,11 @@ Works with Claude Code and Antigravity.
    - Scaffolds `initial_program.py`, `evaluator.py`, and `config.yaml` that work directly with `pip install openevolve`.
 3. **A trustworthy evaluator template**
    - Checks correctness against a reference solver (exact DP).
-   - Tests on 40 seeded random instances plus edge cases.
-   - Runs each candidate in its own process with a time limit.
+   - Tests on 40 seeded random instances plus edge cases, with a separate `--held-out` split for final verification.
+   - Runs each candidate in its own process with a time limit and code-length cap (`MAX_CODE_CHARS`).
    - Keeps `combined_score` quality-only, so the same program always gets the same score. Runtime is recorded separately as a median.
+4. **GDPR / private-corpus protection (`BLIND_MODE = True` by default)**
+   - Strips exception messages, candidate `print`/`stderr` output, and raw data values from error reports so private corpus text or participant data does not leak into the cloud agent context.
 
 ## Is this plugin right for my problem?
 
@@ -196,10 +198,11 @@ To prevent accidental data leaks through crash tracebacks or debug prints, **`BL
 - **Silent stdout/stderr**: Anything a candidate prints is captured and discarded before results return to the agent.
 - **Aggregate-only rule failures**: Constraint errors report only the instance index and rule name, never raw item values.
 
-**Three rules for strict GDPR / IRB datasets:**
-1. **Give the agent a 3-row fake schema, not the real file.** Keep the real corpus outside the project folder (or block agent file reads via `.claude/settings.json` `permissions.deny`), and put a 3-line synthetic file (`dummy_sample.tsv`) in the workspace so the agent knows the column format.
-2. **Keep `BLIND_MODE = True` in `evaluator.py`.** Have `evaluator.py` read the real local dataset path directly inside `_RUNNER` and return only aggregate numbers (`combined_score`, error counts by category).
-3. **Need a 100% offline air-gap?** Use Mode B (`openevolve`) with `api_base: "http://localhost:11434/v1"` pointed at a local LLM (Ollama, LM Studio, or vLLM) with network disconnected.
+**Four rules for strict GDPR / DSGVO / IRB datasets:**
+1. **Pre-mask sensitive identifiers before loading the data.** Even when evaluating locally, always pseudonymise or mask personal identifiers (names, participant IDs, phone numbers, exact addresses, rare clinical/biographical details) into tokens such as `SPK_001`, `[NAME]`, or `[LOC]` before running any experiment.
+2. **Give the agent a 3-row fake schema, not the real file.** Keep the real corpus outside the project folder (or block agent file reads via `.claude/settings.json` `permissions.deny`), and put a 3-line synthetic file (`dummy_sample.tsv`) in the workspace so the agent knows the column format.
+3. **Keep `BLIND_MODE = True` in `evaluator.py`.** Have `evaluator.py` read the real local dataset path directly inside `_RUNNER` and return only aggregate numbers (`combined_score`, error counts by category).
+4. **Need a 100% offline air-gap?** Use Mode B (`openevolve`) with `api_base: "http://localhost:11434/v1"` pointed at a local LLM (Ollama, LM Studio, or vLLM) with network disconnected.
 
 ## Recommended path: three levels, then evolve
 
