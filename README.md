@@ -248,4 +248,4 @@ See [CHANGELOG.md](CHANGELOG.md) for release notes.
 - Workspace templates (`# EVOLVE-BLOCK`, `evaluator.py`, `config.yaml`) are designed to interoperate with **[OpenEvolve](https://github.com/algorithmicsuperintelligence/openevolve)** by Algorithmic SuperIntelligence Labs.
 - Built for use with **[Google Antigravity](https://antigravity.google)** and **[Claude Code](https://code.claude.com/docs/en/overview)**.
 
-> *Disclaimer: This is an independent community plugin and is not affiliated with or endorsed by Google DeepMind.*
+> *Disclaimer: This is an independent community plugin and is not affiliated with or endorsed by Google DeepMind. Released completely free and open-source under the [MIT License](LICENSE) with no plans for monetization.*

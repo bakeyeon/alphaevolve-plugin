@@ -223,4 +223,4 @@ Mode A에서는 스크립트 세 개가 일을 나눕니다. `scaffold_evolve.py
 - 작업 폴더 템플릿(`# EVOLVE-BLOCK`, `evaluator.py`, `config.yaml`)은 Algorithmic SuperIntelligence Labs의 **[OpenEvolve](https://github.com/algorithmicsuperintelligence/openevolve)**와 함께 쓸 수 있도록 설계했습니다.
 - **[Google Antigravity](https://antigravity.google)**와 **[Claude Code](https://code.claude.com/docs/en/overview)**에서 쓰도록 만들었습니다.
 
-> *고지: 이 플러그인은 독립적인 커뮤니티 플러그인이며 Google DeepMind와 관련이 없고 Google DeepMind의 보증을 받지 않았습니다.*
+> *고지: 이 플러그인은 독립적인 커뮤니티 플러그인이며 Google DeepMind와 관련이 없고 Google DeepMind의 보증을 받지 않았습니다. 수익화 계획 없이 누구나 자유롭게 사용할 수 있도록 [MIT 라이선스](LICENSE)로 무료 공개합니다.*
