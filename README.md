@@ -144,6 +144,18 @@ Say these limits out loud in any write-up:
 - **Forecasts get less certain the further they go.** Report them as scenarios together with the
   backtest error, not as facts.
 
+### How is this different from deep learning?
+
+If you are new to computational linguistics or data science, the two can look similar from the outside
+("feed data in, get a better predictor out"), but they produce completely different things:
+
+| Question | Deep learning (neural networks, fine-tuning) | Code evolution (this plugin) |
+|---|---|---|
+| **What comes out at the end?** | A file of millions of numbers (weights). It predicts well, but you cannot read the numbers to see *why*. | `best_program.py`: a short Python function (rules, a formula, an ordering) that you can read line by line and put in a paper. |
+| **How does it improve?** | By taking derivatives (gradients) of a smooth loss function and nudging weights. | By rewriting code and testing it. No derivatives needed, so discrete rules, orderings, and run time all work. |
+| **How much data and hardware?** | Usually thousands to millions of examples and a GPU. Small datasets easily overfit. | Can run on a laptop CPU with a few hundred items—or zero data at all for scheduling and speed problems—as long as the code size is kept small. |
+| **When should I use which?** | Meaning, acoustics, images, or open-ended text where no short rule exists. | When the hypothesis itself is an explicit rule order, formula, or heuristic, or when you want to speed up a slow piece of code. |
+
 ### Not needed: use something simpler
 
 | Situation | Why evolution does not help | Use instead |

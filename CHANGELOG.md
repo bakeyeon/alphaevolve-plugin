@@ -3,6 +3,7 @@
 ## 1.4.2 (2026-11-20)
 
 - README: adds a beta notice at the top (English and Korean).
+- README: adds "How is this different from deep learning?" comparing neural-network weights with readable evolved code for junior researchers (English and Korean).
 
 ## 1.4.1 (2026-11-20)
 
