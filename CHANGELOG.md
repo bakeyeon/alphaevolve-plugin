@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.4.1 (2026-11-20)
 
 - README, `SKILL.md`, `evaluator.py` comment: describe `BLIND_MODE` as a leak guard that closes one path
   (error messages), not GDPR or IRB compliance. Note that a Read deny rule does not block Bash, so the real
