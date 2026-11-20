@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.4.2 (2026-11-20)
 
 - README: adds a beta notice at the top (English and Korean).
 
