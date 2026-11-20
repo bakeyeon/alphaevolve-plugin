@@ -5,6 +5,8 @@
 An evolutionary algorithm discovery and code optimization plugin modeled on Google DeepMind's **AlphaEvolve** and the open-source **OpenEvolve**.
 Works with Claude Code and Antigravity.
 
+> **Beta.** This plugin is in early development and has not been fully tested yet. Check its results before you rely on them, and please [open an issue](https://github.com/bakeyeon/alphaevolve-plugin/issues) if something breaks.
+
 ## Install
 
 **Claude Code**

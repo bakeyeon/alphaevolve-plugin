@@ -5,6 +5,8 @@
 Google DeepMind의 **AlphaEvolve**와 오픈소스 **OpenEvolve** 구조를 따라 만든 진화형 알고리즘 탐색·코드 최적화 플러그인입니다.
 Claude Code와 Antigravity에서 쓸 수 있습니다.
 
+> **베타 버전입니다.** 아직 개발 초기라 충분히 테스트하지 못했습니다. 결과를 그대로 믿기 전에 꼭 확인하시고, 문제가 생기면 [이슈](https://github.com/bakeyeon/alphaevolve-plugin/issues)로 알려 주세요.
+
 ## 설치
 
 **Claude Code**

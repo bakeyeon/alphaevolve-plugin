@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- README: adds a beta notice at the top (English and Korean).
+
 ## 1.4.1 (2026-11-20)
 
 - README, `SKILL.md`, `evaluator.py` comment: describe `BLIND_MODE` as a leak guard that closes one path
